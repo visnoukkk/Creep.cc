@@ -5,7 +5,7 @@ A Roblox UI library inspired by Splix, BBot and many others.
 * [Example](Example.lua)
 
 ###### Interface Addons:
-* [Theme Manager](Theme Manager.lua)&nbsp;&nbsp;|&nbsp;&nbsp;[Settings](Settings.lua) 
+* [Theme Manager](ThemeManager.lua)&nbsp;&nbsp;|&nbsp;&nbsp;[Settings](Settings.lua) 
 
 ## Features
 - Tabs, group boxes, and tab boxes
