@@ -1,5 +1,5 @@
 # CreepDotCCLib
-A Roblox UI library inspired by Splix, BBot and many others.
+A Roblox UI library inspired by Splix, BBot, LinoriaLib and many others.
 
 ###### Example Script: 
 * [Example](Example.lua)
@@ -14,7 +14,4 @@ A Roblox UI library inspired by Splix, BBot and many others.
 - Dependency boxes, allowing you to easily hide/show UI elements depending on the state of other UI elements
 
 ## Contributors
-- Inori: Main developer.
-- Wally: Cleaning up verbose code, extending library functionality.
-- Stefanuk: Extending library functionality.
-- matas3535: Creator of Splix.
+- Visnouk: Main developer.
