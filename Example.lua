@@ -3,7 +3,7 @@ while not game:IsLoaded() do task.wait(0.1) end
 local ac = (gethui and gethui()) or game:GetService("CoreGui")
 
 local bc = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Source.lua'))()
-local ci = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Theme%20Manager.lua'))()
+local ci = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/ThemeManager.lua'))()
 local bx = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Settings.lua'))()
 
 local dc = bc:CreateWindow({
