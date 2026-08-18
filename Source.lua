@@ -30,10 +30,10 @@ local Library = {
     HudRegistry = {};
 
     FontColor = Color3.fromRGB(255, 255, 255);
-    MainColor = Color3.fromRGB(28, 28, 28);
+    MainColor = Color3.fromRGB(24, 24, 24);
     BackgroundColor = Color3.fromRGB(20, 20, 20);
-    AccentColor = Color3.fromRGB(0, 85, 255);
-    OutlineColor = Color3.fromRGB(50, 50, 50);
+    AccentColor = Color3.fromRGB(71, 119, 182);
+    OutlineColor = Color3.fromRGB(31, 31, 31);
     RiskColor = Color3.fromRGB(255, 50, 50),
 
     Black = Color3.new(0, 0, 0);
@@ -258,9 +258,9 @@ function Library:MakeDraggable(Instance, Cutoff, IsWindow)
                                 ZIndex = 100000,
                                 Parent = ScreenGui
                             })
-
-                            Library:Create("UIStroke", {
-                                Color = Color3.fromRGB(255, 255, 255),
+                         
+                            local stroke = Library:Create("UIStroke", {
+                                Color = Library.AccentColor,
                                 Thickness = 1,
                                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                                 Parent = Wireframe
@@ -297,103 +297,6 @@ function Library:MakeDraggable(Instance, Cutoff, IsWindow)
                 end
             end)
         end
-    end)
-end;
-
-function Library:MakeResizable(Instance, MinSize, MaxSize)
-    MinSize = MinSize or Vector2.new(400, 300)
-    MaxSize = MaxSize or Vector2.new(1400, 1000)
-
-    local Grip = Library:Create('TextButton', {
-        Name = 'ResizeGrip',
-        Text = '',
-        AutoButtonColor = false,
-        BackgroundTransparency = 1,
-        Size = UDim2.fromOffset(16, 16),
-        Position = UDim2.new(1, -4, 1, -4),
-        AnchorPoint = Vector2.new(1, 1),
-        ZIndex = 25,
-        Parent = Instance,
-    })
-
-    local GripIcon = Library:CreateLabel({
-        BackgroundTransparency = 1,
-        Size = UDim2.fromOffset(16, 16),
-        Position = UDim2.new(1, 0, 1, 0),
-        AnchorPoint = Vector2.new(1, 1),
-        Text = '◢',
-        TextColor3 = Library.OutlineColor,
-        TextSize = Library.FontSize + 2,
-        ZIndex = 26,
-        Parent = Grip,
-    })
-    Library:AddToRegistry(GripIcon, {
-        TextColor3 = 'OutlineColor',
-    })
-
-    Grip.InputBegan:Connect(function(Input)
-        if Input.UserInputType ~= Enum.UserInputType.MouseButton1
-            and Input.UserInputType ~= Enum.UserInputType.Touch then
-            return
-        end
-
-        local StartSize = Instance.Size
-        local DragStart = Input.Position
-        local HasMoved = false
-        local Wireframe = nil
-        local ChangedConn, EndedConn
-
-        ChangedConn = InputService.InputChanged:Connect(function(Change)
-            if Change.UserInputType ~= Enum.UserInputType.MouseMovement and Change ~= Input then
-                return
-            end
-
-            local Delta = Change.Position - DragStart
-            if Delta.Magnitude <= 2 then return end
-            HasMoved = true
-
-            local newW = math.clamp(StartSize.X.Offset + Delta.X, MinSize.X, MaxSize.X)
-            local newH = math.clamp(StartSize.Y.Offset + Delta.Y, MinSize.Y, MaxSize.Y)
-            local newSize = UDim2.fromOffset(newW, newH)
-
-            if Library.WireframeDrag then
-                if not Wireframe then
-                    Wireframe = Library:Create('Frame', {
-                        Size = Instance.Size,
-                        Position = Instance.Position,
-                        AnchorPoint = Instance.AnchorPoint,
-                        BackgroundTransparency = 1,
-                        Active = false,
-                        ZIndex = 100000,
-                        Parent = ScreenGui,
-                    })
-                    Library:Create('UIStroke', {
-                        Color = Color3.fromRGB(255, 255, 255),
-                        Thickness = 1,
-                        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                        Parent = Wireframe,
-                    })
-                end
-                Wireframe.Size = newSize
-                Wireframe.Position = Instance.Position
-            else
-                Instance.Size = newSize
-            end
-        end)
-
-        EndedConn = InputService.InputEnded:Connect(function(EndInput)
-            if EndInput ~= Input and EndInput.UserInputType ~= Enum.UserInputType.Touch then
-                return
-            end
-
-            ChangedConn:Disconnect()
-            EndedConn:Disconnect()
-
-            if Library.WireframeDrag and HasMoved and Wireframe then
-                Instance.Size = Wireframe.Size
-                Wireframe:Destroy()
-            end
-        end)
     end)
 end;
 
@@ -1452,57 +1355,131 @@ do
         end
 
         local Picking = false;
+        local LongPressTime = Info.LongPressTime or 0.55;
+        local TouchMoveThreshold = Info.TouchMoveThreshold or 10;
+
+        local function OpenModeSelect()
+            ModeSelectOuter.Visible = true;
+        end;
+
+        local function BeginPicking()
+            if Picking then
+                return;
+            end;
+
+            Picking = true;
+
+            DisplayLabel.Text = '';
+
+            local Break;
+            local Text = '';
+
+            task.spawn(function()
+                while (not Break) do
+                    if Text == '...' then
+                        Text = '';
+                    end;
+
+                    Text = Text .. '.';
+                    DisplayLabel.Text = Text;
+
+                    wait(0.4);
+                end;
+            end);
+
+            wait(0.2);
+
+            local Event;
+            Event = InputService.InputBegan:Connect(function(Input)
+                local Key;
+
+                if Input.UserInputType == Enum.UserInputType.Keyboard then
+                    Key = Input.KeyCode.Name;
+                elseif Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    Key = 'MB1';
+                elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+                    Key = 'MB2';
+                elseif Input.UserInputType == Enum.UserInputType.Touch then
+                    Key = 'Touch';
+                end;
+
+                if not Key then
+                    return;
+                end;
+
+                Break = true;
+                Picking = false;
+
+                DisplayLabel.Text = Key;
+                KeyPicker.Value = Key;
+                Library:SafeCallback(KeyPicker.ChangedCallback, Input.KeyCode or Input.UserInputType)
+                Library:SafeCallback(KeyPicker.Changed, Input.KeyCode or Input.UserInputType)
+
+                Library:AttemptSave();
+                Event:Disconnect();
+            end);
+        end;
+
         PickOuter.InputBegan:Connect(function(Input)
-            if (Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch) and not Library:MouseIsOverOpenedFrame() then
-                Picking = true;
+            if Library:MouseIsOverOpenedFrame() then
+                return;
+            end;
 
-                DisplayLabel.Text = '';
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                BeginPicking();
+            elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+                OpenModeSelect();
+            elseif Input.UserInputType == Enum.UserInputType.Touch then
+                local StartPosition = Input.Position;
+                local TouchMoved = false;
+                local TouchEnded = false;
+                local LongPressed = false;
+                local ChangedConn;
+                local EndedConn;
 
-                local Break;
-                local Text = '';
+                ChangedConn = InputService.InputChanged:Connect(function(Change)
+                    if Change == Input then
+                        if (Change.Position - StartPosition).Magnitude > TouchMoveThreshold then
+                            TouchMoved = true;
+                        end;
+                    end;
+                end);
 
-                task.spawn(function()
-                    while (not Break) do
-                        if Text == '...' then
-                            Text = '';
+                EndedConn = InputService.InputEnded:Connect(function(EndInput)
+                    if EndInput == Input then
+                        TouchEnded = true;
+
+                        if ChangedConn then
+                            ChangedConn:Disconnect();
                         end;
 
-                        Text = Text .. '.';
-                        DisplayLabel.Text = Text;
+                        if EndedConn then
+                            EndedConn:Disconnect();
+                        end;
 
-                        wait(0.4);
+                        if (not LongPressed) and (not TouchMoved) then
+                            task.spawn(BeginPicking);
+                        end;
                     end;
                 end);
 
-                wait(0.2);
-
-                local Event;
-                Event = InputService.InputBegan:Connect(function(Input)
-                    local Key;
-
-                    if Input.UserInputType == Enum.UserInputType.Keyboard then
-                        Key = Input.KeyCode.Name;
-                    elseif Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        Key = 'MB1';
-                    elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
-                        Key = 'MB2';
-                    elseif Input.UserInputType == Enum.UserInputType.Touch then
-                        Key = 'Touch';
+                task.delay(LongPressTime, function()
+                    if TouchEnded or TouchMoved then
+                        return;
                     end;
 
-                    Break = true;
-                    Picking = false;
+                    LongPressed = true;
 
-                    DisplayLabel.Text = Key;
-                    KeyPicker.Value = Key;
-                    Library:SafeCallback(KeyPicker.ChangedCallback, Input.KeyCode or Input.UserInputType)
-                    Library:SafeCallback(KeyPicker.Changed, Input.KeyCode or Input.UserInputType)
+                    if ChangedConn then
+                        ChangedConn:Disconnect();
+                    end;
 
-                    Library:AttemptSave();
-                    Event:Disconnect();
+                    if EndedConn then
+                        EndedConn:Disconnect();
+                    end;
+
+                    OpenModeSelect();
                 end);
-            elseif Input.UserInputType == Enum.UserInputType.MouseButton2 and not Library:MouseIsOverOpenedFrame() then
-                ModeSelectOuter.Visible = true;
             end;
         end);
 
@@ -2924,9 +2901,8 @@ do
     Library_UpdateNotifAlignment()
 
     local WatermarkOuter = Library:Create('Frame', {
-        AnchorPoint = Vector2.new(0.5, 0);
         BorderColor3 = Color3.new(0, 0, 0);
-        Position = UDim2.new(0.5, 0, 0, 8);
+        Position = UDim2.new(0, 100, 0, -25);
         Size = UDim2.new(0, 213, 0, 20);
         ZIndex = 200;
         Visible = false;
@@ -3065,10 +3041,7 @@ end;
 
 function Library:SetWatermark(Text)
     local X, Y = Library:GetTextBounds(Text, Library.Font, Library.FontSize);
-    local posY = Library.Watermark.Position.Y
-    Library.Watermark.AnchorPoint = Vector2.new(0.5, 0)
     Library.Watermark.Size = UDim2.new(0, X + 15, 0, (Y * 1.5) + 3);
-    Library.Watermark.Position = UDim2.new(0.5, 0, posY.Scale, posY.Offset)
     Library:SetWatermarkVisibility(true)
 
     Library.WatermarkText.Text = Text;
@@ -3214,7 +3187,7 @@ function Library:CreateWindow(...)
     if type(Config.TabPadding) ~= 'number' then Config.TabPadding = 0 end
     if type(Config.MenuFadeTime) ~= 'number' then Config.MenuFadeTime = 0.2 end
 
-    if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 600) end
+    if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 650) end
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
 
     if InputService.TouchEnabled then
@@ -3230,17 +3203,13 @@ function Library:CreateWindow(...)
         Config.Position = UDim2.fromScale(0.5, 0.5)
     end
 
-    if Config.WireframeDrag ~= nil then
-        Library.WireframeDrag = Config.WireframeDrag
-    end
-
     local Window = {
         Tabs = {};
     };
 
     local Outer = Library:Create('Frame', {
         AnchorPoint = Config.AnchorPoint,
-        BackgroundTransparency = 1,
+        BackgroundColor3 = Color3.new(0, 0, 0);
         BorderSizePixel = 0;
         Position = Config.Position,
         Size = Config.Size,
@@ -3249,10 +3218,6 @@ function Library:CreateWindow(...)
         Parent = ScreenGui;
     });
     Library:MakeDraggable(Outer, 25, true);
-
-    if Config.Resizable then
-        Library:MakeResizable(Outer, Config.MinSize, Config.MaxSize)
-    end
 
     local Inner = Library:Create('Frame', {
         Name = "Inner",
@@ -3373,6 +3338,24 @@ function Library:CreateWindow(...)
     Library:AddToRegistry(TabContainer, {
         BackgroundColor3 = 'MainColor';
         BorderColor3 = 'OutlineColor';
+    });
+    Outer.ClipsDescendants = true;
+    local CornerCircle = Library:Create('Frame', {
+        AnchorPoint      = Vector2.new(0.5, 0.5);
+        BackgroundColor3 = Library.AccentColor;
+        BackgroundTransparency = 0.5;
+        BorderSizePixel  = 0;
+        Position         = UDim2.new(1, 0, 1, 0);
+        Size             = UDim2.fromOffset(46, 46);
+        ZIndex           = 10;
+        Parent           = Inner;
+    });
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(1, 0);
+        Parent       = CornerCircle;
+    });
+    Library:AddToRegistry(CornerCircle, {
+        BackgroundColor3 = 'AccentColor';
     });
     function Window:SetWindowTitle(Title)
         WindowLabel.Text = Title;
@@ -3531,10 +3514,10 @@ function Library:CreateWindow(...)
             });
             local GroupboxLabel = Library:CreateLabel({
                 Size = UDim2.new(1, 0, 0, 18);
-                Position = UDim2.new(0, 4, 0, 2);
+                Position = UDim2.new(0, 0, 0, 2);
                 TextSize = Library.FontSize;
                 Text = Info.Name;
-                TextXAlignment = Enum.TextXAlignment.Left;
+                TextXAlignment = Enum.TextXAlignment.Center;
                 ZIndex = 5;
                 Parent = BoxInner;
             });
