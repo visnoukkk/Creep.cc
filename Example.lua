@@ -32,6 +32,7 @@ local ch = {
 local q = ch.Aiming:AddLeftGroupbox('Aimbot')
 local o = ch.Aiming:AddRightGroupbox('Settings')
 
+-- create toggles
 q:AddToggle('AimbotEnabled',   { Text = 'Enabled',    Default = false, Callback = function() end })
  :AddKeyPicker('AimbotKey',    { Default = 'None', Mode = 'Hold', Text = 'Aimbot', NoUI = false, Callback = function() end, ChangedCallback = function() end })
 q:AddToggle('AimbotWallcheck', { Text = 'Wallcheck',  Default = false, Callback = function() end })
@@ -202,6 +203,7 @@ bx:BuildConfigSection(ch['Ui'])
 ci:ApplyToTab(ch['Ui'])
 ci:ApplyTheme('Logic')
 
+-- create watermark
 bc.ToggleKeybind = Options.MenuKeybind
 bc.KeybindFrame.Visible = false
 bc:SetWatermarkVisibility(true)
@@ -210,6 +212,7 @@ bc:OnUnload(function()
     bc.Unloaded = true
 end)
 
+-- unload
 return function()
     bc:Unload()
 end
