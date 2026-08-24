@@ -1,19 +1,23 @@
+--check if game is loaded
 while not game:IsLoaded() do task.wait(0.1) end
 
 local ac = (gethui and gethui()) or game:GetService("CoreGui")
 
+-- ui links
 local bc = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Source.lua'))()
-local ci = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/ThemeManager.lua'))()
-local bx = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Settings.lua'))()
+local ci = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/addons/ThemeManager.lua'))()
+local bx = loadstring(game:HttpGet('https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/addons/SaveManager.lua'))()
 
+-- create window
 local dc = bc:CreateWindow({
-    Title = 'creep.cc',
+    Title = 'creep.cc example',
     Center = true,
     AutoShow = true,
     TabPadding = 8,
     MenuFadeTime = 0.2,
 })
 
+-- create tabs
 local ch = {
     Aiming     = dc:AddTab('Aiming'),
     Triggerbot = dc:AddTab('Triggerbot'),
@@ -24,6 +28,7 @@ local ch = {
     ['Ui']     = dc:AddTab('Ui'),
 }
 
+-- create groupbox
 local q = ch.Aiming:AddLeftGroupbox('Aimbot')
 local o = ch.Aiming:AddRightGroupbox('Settings')
 
@@ -186,6 +191,7 @@ bj:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'RightShift', N
 bj:AddToggle('ShowKeybinds', { Text = 'Show Keybinds', Default = false, Callback = function(v) bc.KeybindFrame.Visible = v end })
 bj:AddToggle('ShowWatermark',{ Text = 'Show Watermark', Default = true,  Callback = function(v) bc:SetWatermarkVisibility(v) end })
 
+-- save manager
 ci:SetLibrary(bc)
 bx:SetLibrary(bc)
 bx:IgnoreThemeSettings()
