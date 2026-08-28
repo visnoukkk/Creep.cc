@@ -25,7 +25,7 @@ local ch = {
     Performance= dc:AddTab('Performance'),
     Skin       = dc:AddTab('Skin'),
     Misc       = dc:AddTab('Misc'),
-    ['Ui']     = dc:AddTab('Ui'),
+    ['Ui']     = dc:AddTab('UI Settings'),
 }
 
 -- create groupbox
