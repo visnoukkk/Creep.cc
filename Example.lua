@@ -1,4 +1,4 @@
---check if game is loaded
+-- check if game is loaded
 while not game:IsLoaded() do task.wait(0.1) end
 
 local ac = (gethui and gethui()) or game:GetService("CoreGui")
@@ -191,6 +191,55 @@ bj:AddButton('Unload', function() bc:Unload() end)
 bj:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'RightShift', NoUI = true, Text = 'Menu keybind' })
 bj:AddToggle('ShowKeybinds', { Text = 'Show Keybinds', Default = false, Callback = function(v) bc.KeybindFrame.Visible = v end })
 bj:AddToggle('ShowWatermark',{ Text = 'Show Watermark', Default = true,  Callback = function(v) bc:SetWatermarkVisibility(v) end })
+
+-- background adjustors
+local bg = ch['Ui']:AddLeftGroupbox('Background')
+if bc.AddBlurSlider then bc:AddBlurSlider(bg) end
+if bc.AddDarkenSlider then bc:AddDarkenSlider(bg) end
+if bc.AddKeybindTransparencySlider then
+    bc:AddKeybindTransparencySlider(bg)
+elseif bc.KeybindFrame then
+    bg:AddSlider('KeybindTransparency', {
+        Text     = 'Keybind Transparency',
+        Default  = 0,
+        Min      = 0,
+        Max      = 100,
+        Rounding = 0,
+        Suffix   = '%',
+        Callback = function(Value)
+            local Alpha = Value / 100
+            local Outer = bc.KeybindFrame
+            if Outer then
+                Outer.BackgroundTransparency = Alpha
+                Outer.BorderSizePixel = Alpha >= 1 and 0 or 1
+            end
+            local Inner = bc.KeybindInner or (Outer and Outer:FindFirstChildOfClass('Frame'))
+            if Inner then
+                Inner.BackgroundTransparency = Alpha
+                Inner.BorderSizePixel = Alpha >= 1 and 0 or 1
+                pcall(function()
+                    Inner:FindFirstChildOfClass('Frame').BackgroundTransparency = Alpha
+                end)
+            end
+        end,
+    })
+end
+
+-- notification options
+if bc.NotifyConfig then
+    local ng = ch['Ui']:AddLeftGroupbox('Notifications')
+    ng:AddDropdown('NotificationBarSide', {
+        Text = 'Notification Accent Color Position',
+        Default = bc.NotifyConfig.BarSide or 'Top',
+        Values = { 'Top', 'Bottom', 'Left', 'Right' },
+        Callback = function(Value)
+            bc.NotifyConfig.BarSide = Value
+        end,
+    })
+    ng:AddButton('Test Notification', function()
+        bc:Notify('Test Notification')
+    end)
+end
 
 -- save manager
 ci:SetLibrary(bc)
