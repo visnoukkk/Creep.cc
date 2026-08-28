@@ -2941,7 +2941,7 @@ do
         local align = cfg.Alignment or 'Left'
         if align == 'Center' then
             area.AnchorPoint = Vector2.new(0.5, 1)
-            area.Position = UDim2.new(0.5, -150, 1, -10)
+            area.Position = UDim2.new(0.5, 0, 1, -10)
             area.Size = UDim2.new(0, 300, 1, -10)
             layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
             layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
