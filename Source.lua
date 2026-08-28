@@ -51,6 +51,8 @@ local Library = {
     WireframeDrag = true;
     UseBlur = true;
     BlurSize = 24;
+    UseDarken = true;
+    DarkenAmount = 55;
 
     KeybindMode = 'All';
 
@@ -92,7 +94,6 @@ end
 function Library:UpdateBlur()
     local open = Library.Toggled and Library.UseBlur;
     local targetSize = open and Library.BlurSize or 0;
-    local targetBg   = open and 0.45 or 1;
 
     if open then
         Library.BlurEffect.Enabled = true;
@@ -101,7 +102,8 @@ function Library:UpdateBlur()
     Library.BlurEffect.Size = targetSize;
 
     if Library.DarkOverlay then
-        Library.DarkOverlay.BackgroundTransparency = targetBg;
+        local dark = Library.Toggled and Library.UseDarken;
+        Library.DarkOverlay.BackgroundTransparency = dark and (1 - (Library.DarkenAmount / 100)) or 1;
     end
 
     if not open then
@@ -136,6 +138,32 @@ function Library:AddBlurSlider(Groupbox)
         Rounding = 0;
         Callback = function(Value)
             Library:SetBlur(Value);
+        end;
+    });
+end
+
+-- Call this with any Groupbox to add a darken toggle + amount slider
+-- e.g. Library:AddDarkenSlider(MyGroupbox)
+function Library:AddDarkenSlider(Groupbox)
+    Groupbox:AddToggle('LinoriaUseDarken', {
+        Text    = 'Background Darken';
+        Default = Library.UseDarken;
+        Tooltip = 'Darken the background when the menu is open';
+        Callback = function(Value)
+            Library.UseDarken = Value;
+            Library:UpdateBlur();
+        end;
+    });
+    Groupbox:AddSlider('LinoriaDarkenAmount', {
+        Text     = 'Darken Amount';
+        Default  = Library.DarkenAmount;
+        Min      = 0;
+        Max      = 100;
+        Rounding = 0;
+        Suffix   = '%';
+        Callback = function(Value)
+            Library.DarkenAmount = Value;
+            Library:UpdateBlur();
         end;
     });
 end
@@ -3246,6 +3274,8 @@ function Library:CreateWindow(...)
 
     if type(Config.UseBlur) == 'boolean' then Library.UseBlur = Config.UseBlur end
     if type(Config.BlurSize) == 'number' then Library.BlurSize = Config.BlurSize end
+    if type(Config.UseDarken) == 'boolean' then Library.UseDarken = Config.UseDarken end
+    if type(Config.DarkenAmount) == 'number' then Library.DarkenAmount = Config.DarkenAmount end
 
     if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 650) end
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
