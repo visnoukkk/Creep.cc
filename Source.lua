@@ -2947,11 +2947,13 @@ do
             Total = Total + Library.NotificationStack[Idx].Height + 4;
         end;
 
+        local ParentSize = Library.NotificationArea.AbsoluteSize;
+        local Height = (ParentSize.Y > 0 and ParentSize.Y or 720) * 0.7;
         local Y = -(Total / 2);
         for Idx = Count, 1, -1 do
             local Data = Library.NotificationStack[Idx];
             Data.Frame.AnchorPoint = Vector2.new(0.5, 0);
-            Data.Frame.Position = UDim2.new(0.5, 0, 0.8, Y);
+            Data.Frame.Position = UDim2.new(0.5, 0, 0, Height + Y - (Data.Height / 2));
 
             Y = Y + Data.Height + 4;
         end;
@@ -2961,13 +2963,6 @@ do
     Library:GiveSignal(RunService.Heartbeat:Connect(function()
         RelayoutNotifications();
     end));
-
-    print(string.format(
-        '[Linoria] Notifications at %dx%d | center %.0f%% down',
-        Library.NotificationArea.AbsoluteSize.X,
-        Library.NotificationArea.AbsoluteSize.Y,
-        0.8 * 100
-    ));
 
     local WatermarkOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
@@ -3148,6 +3143,9 @@ function Library:Notify(Text, Time)
         Parent = Library.NotificationArea;
     });
     table.insert(Library.NotificationStack, { Frame = NotifyOuter, Height = YSize });
+    local NotifyAreaSize = Library.NotificationArea.AbsoluteSize;
+    local YStart = (NotifyAreaSize.Y > 0 and NotifyAreaSize.Y * 0.7 or 500) - YSize / 2;
+    NotifyOuter.Position = UDim2.new(0.5, 0, 0, YStart);
     local NotifyInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
