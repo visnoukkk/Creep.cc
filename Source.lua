@@ -4043,18 +4043,43 @@ end
 
 -- Spinning 3D text behind the UI
 do
-    local SpinText = Instance.new('Text');
-    SpinText.Name = 'LinoriaSpinText';
-    SpinText.Text = 'CREEP.CC';
-    SpinText.Font = Enum.Font.Code;
-    SpinText.Color = Library.AccentColor;
-    SpinText.Outline = true;
-    SpinText.OutlineColor = Library.Black;
-    SpinText.Height = 14;
-    SpinText.Size = Vector3.new(0, 0, 0);
-    SpinText.Transparency = 0.3;
-    SpinText.Visible = false;
-    SpinText.Parent = workspace;
+    local Backdrop = Instance.new('ViewportFrame');
+    Backdrop.Name = 'LinoriaSpinText';
+    Backdrop.BackgroundTransparency = 1;
+    Backdrop.BorderSizePixel = 0;
+    Backdrop.ZIndex = 0;
+    Backdrop.Visible = false;
+    Backdrop.Size = UDim2.new(1, 0, 1, 0);
+    Backdrop.Parent = ScreenGui;
+
+    local TextPart = Instance.new('Part');
+    TextPart.Anchored = true;
+    TextPart.CastShadow = false;
+    TextPart.Material = Enum.Material.SmoothPlastic;
+    TextPart.Color = Library.BackgroundColor;
+    TextPart.Size = Vector3.new(28, 8, 1);
+    TextPart.Parent = Backdrop;
+
+    for _, Face in next, { Enum.NormalId.Front, Enum.NormalId.Back } do
+        local Surface = Instance.new('SurfaceGui', TextPart);
+        Surface.Face = Face;
+        Surface.CanvasSize = Vector2.new(1024, 256);
+
+        local Label = Instance.new('TextLabel', Surface);
+        Label.BackgroundTransparency = 1;
+        Label.Size = UDim2.new(1, 0, 1, 0);
+        Label.Font = Enum.Font.Code;
+        Label.Text = 'CREEP.CC';
+        Label.TextSize = 120;
+        Label.TextWrapped = false;
+        Label.TextColor3 = Library.AccentColor;
+        Label.TextStrokeColor3 = Color3.new(0, 0, 0);
+        Label.TextStrokeTransparency = 0.2;
+    end;
+
+    local Camera = Instance.new('Camera', Backdrop);
+    Backdrop.CurrentCamera = Camera;
+    Camera.CFrame = CFrame.lookAt(Vector3.new(16, 1.5, 16), Vector3.new(0, 0, 0));
 
     local Yaw = 0;
     local WasToggled = nil;
@@ -4062,7 +4087,7 @@ do
     Library:GiveSignal(RunService.RenderStepped:Connect(function(Delta)
         local Toggled = Library.Toggled;
         if WasToggled ~= Toggled then
-            SpinText.Visible = Toggled;
+            Backdrop.Visible = Toggled;
             WasToggled = Toggled;
         end;
 
@@ -4070,18 +4095,13 @@ do
             return;
         end;
 
-        local Camera = workspace.CurrentCamera;
-        if not Camera then
-            return;
-        end;
+        Yaw = Yaw + Delta * 0.9;
 
-        Yaw = Yaw + Delta * 1.5;
-
-        SpinText.CFrame = Camera.CFrame * CFrame.new(0, 0, -80) * CFrame.Angles(0, Yaw, 0);
+        TextPart.CFrame = CFrame.Angles(0, Yaw, 0);
     end));
 
     Library:OnUnload(function()
-        SpinText:Destroy();
+        Backdrop:Destroy();
     end);
 end;
 
