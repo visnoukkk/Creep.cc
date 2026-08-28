@@ -1,4 +1,4 @@
--- check if game is loaded
+--check if game is loaded
 while not game:IsLoaded() do task.wait(0.1) end
 
 local ac = (gethui and gethui()) or game:GetService("CoreGui")
@@ -25,7 +25,7 @@ local ch = {
     Performance= dc:AddTab('Performance'),
     Skin       = dc:AddTab('Skin'),
     Misc       = dc:AddTab('Misc'),
-    ['Ui']     = dc:AddTab('UI Settings'),
+    ['Ui']     = dc:AddTab('Ui'),
 }
 
 -- create groupbox
@@ -188,7 +188,27 @@ ay_group:AddToggle('AllowDummys', { Text = 'Allow Dummys', Default = false, Call
 
 local bj = ch['Ui']:AddLeftGroupbox('Menu')
 bj:AddButton('Unload', function() bc:Unload() end)
-bj:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', { Default = 'RightShift', NoUI = true, Text = 'Menu keybind' })
+bj:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', {
+    Default = 'RightShift',
+    NoUI = true,
+    Text = 'Menu keybind',
+    ChangedCallback = function()
+bc.ToggleKeybind = Options.MenuKeybind
+-- older library copies ignore ToggleKeybind and hardcode RightShift;
+-- handle the toggle ourselves so the newly bound key works regardless
+if not bc.SetKeybindTransparency then
+    game:GetService('UserInputService').InputBegan:Connect(function(Input)
+        if bc.Unloaded then return end
+        if Input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        local Bind = bc.ToggleKeybind
+        local KeyName = (type(Bind) == 'table' and Bind.Value) or Bind
+        if KeyName and Input.KeyCode.Name == KeyName then
+            task.spawn(bc.Toggle)
+        end
+    end)
+end
+    end,
+})
 bj:AddToggle('ShowKeybinds', { Text = 'Show Keybinds', Default = false, Callback = function(v) bc.KeybindFrame.Visible = v end })
 bj:AddToggle('ShowWatermark',{ Text = 'Show Watermark', Default = true,  Callback = function(v) bc:SetWatermarkVisibility(v) end })
 
