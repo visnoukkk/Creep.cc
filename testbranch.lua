@@ -50,7 +50,7 @@ local Library = {
     Toggled = false;
     WireframeDrag = true;
     UseBlur = true;
-    BlurSize = 15;
+    BlurSize = 24;
 
     KeybindMode = 'All';
 
@@ -70,22 +70,78 @@ Library.BlurEffect.Size = 0
 Library.BlurEffect.Enabled = false
 pcall(function() Library.BlurEffect.Parent = Lighting end)
 
+do
+    local OverlayGui = Instance.new("ScreenGui")
+    OverlayGui.Name = "LinoriaBlurOverlay"
+    OverlayGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    OverlayGui.DisplayOrder = -9999
+    ProtectGui(OverlayGui)
+    OverlayGui.Parent = CoreGui
+
+    Library.DarkOverlay = Instance.new("Frame")
+    Library.DarkOverlay.Name = "DarkOverlay"
+    Library.DarkOverlay.Size = UDim2.new(10, 0, 10, 0)
+    Library.DarkOverlay.Position = UDim2.new(-5, 0, -5, 0)
+    Library.DarkOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    Library.DarkOverlay.BackgroundTransparency = 1
+    Library.DarkOverlay.BorderSizePixel = 0
+    Library.DarkOverlay.ZIndex = 1
+    Library.DarkOverlay.Parent = OverlayGui
+end
+
 function Library:UpdateBlur()
-    if Library.UseBlur then
-        if Library.Toggled then
-            Library.BlurEffect.Enabled = true
-            TweenService:Create(Library.BlurEffect, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Size = Library.BlurSize}):Play()
-        end
-    else
-        local tween = TweenService:Create(Library.BlurEffect, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Size = 0})
-        tween:Play()
-    
-        task.delay(0.2, function()
-            if not Library.UseBlur then
-                Library.BlurEffect.Enabled = false
-            end
-        end)
+    local open = Library.Toggled and Library.UseBlur;
+    local targetSize = open and Library.BlurSize or 0;
+    local targetBg   = open and 0.45 or 1;
+
+    if open then
+        Library.BlurEffect.Enabled = true;
     end
+
+    TweenService:Create(Library.BlurEffect, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = targetSize}):Play();
+
+    if Library.DarkOverlay then
+        TweenService:Create(Library.DarkOverlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = targetBg}):Play();
+    end
+
+    if not open then
+        task.delay(0.25, function()
+            if not (Library.Toggled and Library.UseBlur) then
+                Library.BlurEffect.Enabled = false;
+            end
+        end);
+    end
+end
+
+function Library:SetBlur(Size)
+    Library.BlurSize = math.clamp(Size, 0, 56);
+    if Library.Toggled and Library.UseBlur then
+        TweenService:Create(Library.BlurEffect, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {Size = Library.BlurSize}):Play();
+    end
+end
+
+-- Call this with any Groupbox to add a blur toggle + size slider
+-- e.g. Library:AddBlurSlider(MyGroupbox)
+function Library:AddBlurSlider(Groupbox)
+    Groupbox:AddToggle('LinoriaUseBlur', {
+        Text    = 'Background Blur';
+        Default = Library.UseBlur;
+        Tooltip = 'Blur the background when the menu is open';
+        Callback = function(Value)
+            Library.UseBlur = Value;
+            Library:UpdateBlur();
+        end;
+    });
+    Groupbox:AddSlider('LinoriaBlurSize', {
+        Text     = 'Blur Amount';
+        Default  = Library.BlurSize;
+        Min      = 0;
+        Max      = 56;
+        Rounding = 0;
+        Callback = function(Value)
+            Library:SetBlur(Value);
+        end;
+    });
 end
 
 function Library:SetFontSize(Size)
@@ -487,6 +543,10 @@ function Library:Unload()
     
     if Library.BlurEffect then
         Library.BlurEffect:Destroy()
+    end
+
+    if Library.DarkOverlay and Library.DarkOverlay.Parent then
+        Library.DarkOverlay.Parent:Destroy()
     end
 
     ScreenGui:Destroy()
@@ -3187,6 +3247,9 @@ function Library:CreateWindow(...)
     if type(Config.TabPadding) ~= 'number' then Config.TabPadding = 0 end
     if type(Config.MenuFadeTime) ~= 'number' then Config.MenuFadeTime = 0.2 end
 
+    if type(Config.UseBlur) == 'boolean' then Library.UseBlur = Config.UseBlur end
+    if type(Config.BlurSize) == 'number' then Library.BlurSize = Config.BlurSize end
+
     if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 650) end
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
 
@@ -3803,7 +3866,7 @@ function Library:CreateWindow(...)
                 CursorOutline:Remove();
             end);
         end;
-        Library:UpdateBlur()
+        Library:UpdateBlur();
     end
 
     Library:GiveSignal(InputService.InputBegan:Connect(function(Input, Processed)
