@@ -2962,6 +2962,13 @@ do
         RelayoutNotifications();
     end));
 
+    print(string.format(
+        '[Linoria] Notifications at %dx%d | center %.0f%% down',
+        Library.NotificationArea.AbsoluteSize.X,
+        Library.NotificationArea.AbsoluteSize.Y,
+        0.8 * 100
+    ));
+
     local WatermarkOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
         Position = UDim2.new(0, 100, 0, -25);
