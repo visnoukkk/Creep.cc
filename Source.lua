@@ -3223,7 +3223,7 @@ function Library:Notify(Text, Time)
         baseWidth = baseWidth + BAR_THIN;
     end
     table.insert(Library.NotificationStack, { Frame = NotifyOuter, Height = YSize, Width = baseWidth });
-    RelayoutNotifications();
+    Library.RelayoutNotifications();
     local NotifyInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
