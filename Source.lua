@@ -10,6 +10,15 @@ local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
 
+local OldLibrary = getgenv().Library;
+if type(OldLibrary) == 'table' and OldLibrary.ScreenGui then
+    pcall(function()
+        if OldLibrary.Unload then OldLibrary:Unload(); end
+        OldLibrary.ScreenGui:Destroy();
+    end);
+    getgenv().Library = nil;
+end
+
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 local ScreenGui = Instance.new('ScreenGui');
@@ -3012,6 +3021,7 @@ do
         end;
 
         local ParentSize = Library.NotificationArea.AbsoluteSize;
+        if ParentSize.Y <= 0 then ParentSize = Library.ScreenGui.AbsoluteSize; end
         local Height = (ParentSize.Y > 0 and ParentSize.Y or 720) * 0.7;
         local Y = -(Total / 2);
         for Idx = Count, 1, -1 do
@@ -3318,7 +3328,7 @@ function Library:CreateWindow(...)
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
 
     if InputService.TouchEnabled then
-        local vp = workspace.CurrentCamera.ViewportSize
+        local vp = Library.ScreenGui.AbsoluteSize
         local maxWidth = math.min(Config.Size.X.Offset, vp.X - 20)
       
         local maxHeight = math.min(Config.Size.Y.Offset, vp.Y - 60)
@@ -3524,7 +3534,7 @@ function Library:CreateWindow(...)
                 if not HasMoved and Delta.Magnitude <= 2 then return; end
 
                 local TopLeft = Outer.AbsolutePosition;
-                local VPSize = workspace.CurrentCamera.ViewportSize;
+                local VPSize = Library.ScreenGui.AbsoluteSize;
 
                 local NewW = math.clamp(StartSize.X.Offset + Delta.X, MinW, VPSize.X - TopLeft.X);
                 local NewH = math.clamp(StartSize.Y.Offset + Delta.Y, MinH, VPSize.Y - TopLeft.Y);
@@ -3581,8 +3591,7 @@ function Library:CreateWindow(...)
             end;
         end);
 
-        InputService.InputBegan:Connect(function(Input, Processed)
-            if Processed then return; end
+        InputService.InputBegan:Connect(function(Input)
             if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and Input.UserInputType ~= Enum.UserInputType.Touch then return; end
             if Resizing then return; end
 
