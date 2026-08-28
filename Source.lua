@@ -55,7 +55,7 @@ local Library = {
     KeybindMode = 'All';
 
     NotifyConfig = {
-        Alignment = 'Left';
+        Alignment = 'Center';
         BarSide   = 'Left';
         PositionX = 0;
         PositionY = 40;
@@ -2938,19 +2938,25 @@ do
         local area = Library.NotificationArea
         local layout = Library.NotifLayout
 
-        area.Position = UDim2.new(0, cfg.PositionX, 0, cfg.PositionY)
-        area.Size     = UDim2.new(0, 300, 1, -cfg.PositionY)
-
         local align = cfg.Alignment or 'Left'
-        if align == 'Left' then
-            layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-            area.AnchorPoint = Vector2.new(0, 0)
-        elseif align == 'Right' then
-            layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-            area.AnchorPoint = Vector2.new(0, 0)
-        elseif align == 'Center' then
+        if align == 'Center' then
+            area.AnchorPoint = Vector2.new(0.5, 1)
+            area.Position = UDim2.new(0.5, -150, 1, -10)
+            area.Size = UDim2.new(0, 300, 1, -10)
             layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        elseif align == 'Right' then
             area.AnchorPoint = Vector2.new(0, 0)
+            area.Position = UDim2.new(0, cfg.PositionX, 0, cfg.PositionY)
+            area.Size = UDim2.new(0, 300, 1, -cfg.PositionY)
+            layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+            layout.VerticalAlignment = Enum.VerticalAlignment.Top
+        else
+            area.AnchorPoint = Vector2.new(0, 0)
+            area.Position = UDim2.new(0, cfg.PositionX, 0, cfg.PositionY)
+            area.Size = UDim2.new(0, 300, 1, -cfg.PositionY)
+            layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+            layout.VerticalAlignment = Enum.VerticalAlignment.Top
         end
     end
     Library.UpdateNotifAlignment = Library_UpdateNotifAlignment
@@ -4040,66 +4046,6 @@ if InputService.TouchEnabled then
         _origUpdate(self)
     end
 end
-
--- Spinning 3D text behind the UI
-do
-    local TextPart = Instance.new('Part');
-    TextPart.Name = 'LinoriaSpinText';
-    TextPart.Anchored = true;
-    TextPart.CanCollide = false;
-    TextPart.CanQuery = false;
-    TextPart.CanTouch = false;
-    TextPart.CastShadow = false;
-    TextPart.Material = Enum.Material.SmoothPlastic;
-    TextPart.Color = Color3.new(1, 1, 1);
-    TextPart.Size = Vector3.new(18, 5, 1);
-
-    for _, Face in next, { Enum.NormalId.Front, Enum.NormalId.Back } do
-        local Surface = Instance.new('SurfaceGui', TextPart);
-        Surface.Adornee = TextPart;
-        Surface.Face = Face;
-        Surface.CanvasSize = Vector2.new(1024, 256);
-
-        local Label = Instance.new('TextLabel', Surface);
-        Label.BackgroundTransparency = 1;
-        Label.Size = UDim2.new(1, 0, 1, 0);
-        Label.Font = Enum.Font.Code;
-        Label.Text = 'CREEP.CC';
-        Label.TextSize = 120;
-        Label.TextWrapped = false;
-        Label.TextColor3 = Library.AccentColor;
-        Label.TextStrokeColor3 = Color3.new(0, 0, 0);
-        Label.TextStrokeTransparency = 0.2;
-    end;
-
-    local Yaw = 0;
-    local WasToggled = nil;
-
-    Library:GiveSignal(RunService.RenderStepped:Connect(function(Delta)
-        local Toggled = Library.Toggled;
-        if WasToggled ~= Toggled then
-            TextPart.Parent = Toggled and workspace or nil;
-            WasToggled = Toggled;
-        end;
-
-        if not Toggled then
-            return;
-        end;
-
-        local Camera = workspace.CurrentCamera;
-        if not Camera then
-            return;
-        end;
-
-        Yaw = Yaw + Delta * 0.9;
-
-        TextPart.CFrame = Camera.CFrame * CFrame.new(0, 0, -18) * CFrame.Angles(0, Yaw, 0);
-    end));
-
-    Library:OnUnload(function()
-        TextPart:Destroy();
-    end);
-end;
 
 getgenv().Library = Library
 return Library
