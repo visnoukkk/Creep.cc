@@ -2920,31 +2920,36 @@ do
     end;
 end;
 do
+    Library.NotificationStack = {};
+
     Library.NotificationArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
-        Position = UDim2.new(0, Library.NotifyConfig.PositionX, 0, Library.NotifyConfig.PositionY);
-        Size = UDim2.new(0, 300, 1, -Library.NotifyConfig.PositionY);
+        Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 100;
         Parent = ScreenGui;
     });
-    Library.NotifLayout = Library:Create('UIListLayout', {
-        Padding = UDim.new(0, 4);
-        FillDirection = Enum.FillDirection.Vertical;
-        SortOrder = Enum.SortOrder.LayoutOrder;
-        Parent = Library.NotificationArea;
-    });
-    local function Library_UpdateNotifAlignment()
-        local area = Library.NotificationArea
-        local layout = Library.NotifLayout
 
-        area.AnchorPoint = Vector2.new(0.5, 1)
-        area.Position = UDim2.new(0.5, 0, 1, -10)
-        area.Size = UDim2.new(0, 300, 1, -10)
-        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    end
-    Library.UpdateNotifAlignment = Library_UpdateNotifAlignment
-    Library_UpdateNotifAlignment()
+    local function RelayoutNotifications()
+        local Y = 10;
+        for Idx = #Library.NotificationStack, 1, -1 do
+            local Data = Library.NotificationStack[Idx];
+            local NotifyOuter = Data.Frame;
+
+            if not NotifyOuter.Parent then
+                table.remove(Library.NotificationStack, Idx);
+            else
+                NotifyOuter.AnchorPoint = Vector2.new(0.5, 0);
+                NotifyOuter.Position = UDim2.new(0.5, 0, 1, -Y);
+
+                Y = Y + Data.Height + 4;
+            end;
+        end;
+    end;
+    Library.RelayoutNotifications = RelayoutNotifications;
+
+    Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        RelayoutNotifications();
+    end));
 
     local WatermarkOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
@@ -3124,6 +3129,7 @@ function Library:Notify(Text, Time)
         ZIndex = 100;
         Parent = Library.NotificationArea;
     });
+    table.insert(Library.NotificationStack, { Frame = NotifyOuter, Height = YSize });
     local NotifyInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
