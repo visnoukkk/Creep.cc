@@ -2951,7 +2951,7 @@ do
         for Idx = Count, 1, -1 do
             local Data = Library.NotificationStack[Idx];
             Data.Frame.AnchorPoint = Vector2.new(0.5, 0);
-            Data.Frame.Position = UDim2.new(0.5, 0, 0.5, Y);
+            Data.Frame.Position = UDim2.new(0.5, 0, 0.8, Y);
 
             Y = Y + Data.Height + 4;
         end;
