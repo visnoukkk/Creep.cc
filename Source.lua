@@ -49,8 +49,8 @@ local Library = {
 
     Toggled = false;
     WireframeDrag = true;
-    UseBlur = false;
-    BlurSize = 15;
+    UseBlur = true;
+    BlurSize = 24;
 
     KeybindMode = 'All';
 
@@ -70,22 +70,74 @@ Library.BlurEffect.Size = 0
 Library.BlurEffect.Enabled = false
 pcall(function() Library.BlurEffect.Parent = Lighting end)
 
+do
+    local OverlayGui = Instance.new("ScreenGui")
+    OverlayGui.Name = "LinoriaBlurOverlay"
+    OverlayGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    OverlayGui.DisplayOrder = -9999
+    ProtectGui(OverlayGui)
+    OverlayGui.Parent = CoreGui
+
+    Library.DarkOverlay = Instance.new("Frame")
+    Library.DarkOverlay.Name = "DarkOverlay"
+    Library.DarkOverlay.Size = UDim2.new(10, 0, 10, 0)
+    Library.DarkOverlay.Position = UDim2.new(-5, 0, -5, 0)
+    Library.DarkOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    Library.DarkOverlay.BackgroundTransparency = 1
+    Library.DarkOverlay.BorderSizePixel = 0
+    Library.DarkOverlay.ZIndex = 1
+    Library.DarkOverlay.Parent = OverlayGui
+end
+
 function Library:UpdateBlur()
-    if Library.UseBlur then
-        if Library.Toggled then
-            Library.BlurEffect.Enabled = true
-            TweenService:Create(Library.BlurEffect, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Size = Library.BlurSize}):Play()
-        end
-    else
-        local tween = TweenService:Create(Library.BlurEffect, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Size = 0})
-        tween:Play()
-    
-        task.delay(0.2, function()
-            if not Library.UseBlur then
-                Library.BlurEffect.Enabled = false
-            end
-        end)
+    local open = Library.Toggled and Library.UseBlur;
+    local targetSize = open and Library.BlurSize or 0;
+    local targetBg   = open and 0.45 or 1;
+
+    if open then
+        Library.BlurEffect.Enabled = true;
     end
+
+    Library.BlurEffect.Size = targetSize;
+
+    if Library.DarkOverlay then
+        Library.DarkOverlay.BackgroundTransparency = targetBg;
+    end
+
+    if not open then
+        Library.BlurEffect.Enabled = false;
+    end
+end
+
+function Library:SetBlur(Size)
+    Library.BlurSize = math.clamp(Size, 0, 56);
+    if Library.Toggled and Library.UseBlur then
+        Library.BlurEffect.Size = Library.BlurSize;
+    end
+end
+
+-- Call this with any Groupbox to add a blur toggle + size slider
+-- e.g. Library:AddBlurSlider(MyGroupbox)
+function Library:AddBlurSlider(Groupbox)
+    Groupbox:AddToggle('LinoriaUseBlur', {
+        Text    = 'Background Blur';
+        Default = Library.UseBlur;
+        Tooltip = 'Blur the background when the menu is open';
+        Callback = function(Value)
+            Library.UseBlur = Value;
+            Library:UpdateBlur();
+        end;
+    });
+    Groupbox:AddSlider('LinoriaBlurSize', {
+        Text     = 'Blur Amount';
+        Default  = Library.BlurSize;
+        Min      = 0;
+        Max      = 56;
+        Rounding = 0;
+        Callback = function(Value)
+            Library:SetBlur(Value);
+        end;
+    });
 end
 
 function Library:SetFontSize(Size)
@@ -487,6 +539,10 @@ function Library:Unload()
     
     if Library.BlurEffect then
         Library.BlurEffect:Destroy()
+    end
+
+    if Library.DarkOverlay and Library.DarkOverlay.Parent then
+        Library.DarkOverlay.Parent:Destroy()
     end
 
     ScreenGui:Destroy()
@@ -3187,6 +3243,9 @@ function Library:CreateWindow(...)
     if type(Config.TabPadding) ~= 'number' then Config.TabPadding = 0 end
     if type(Config.MenuFadeTime) ~= 'number' then Config.MenuFadeTime = 0.2 end
 
+    if type(Config.UseBlur) == 'boolean' then Library.UseBlur = Config.UseBlur end
+    if type(Config.BlurSize) == 'number' then Library.BlurSize = Config.BlurSize end
+
     if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 650) end
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
 
@@ -3768,53 +3827,41 @@ function Library:CreateWindow(...)
         if Library.Toggled then
             task.spawn(function()
                 local State = InputService.MouseIconEnabled;
+                local GuiService = game:GetService("GuiService");
 
-                local Cursor = Drawing.new('Triangle');
-                Cursor.Thickness = 1;
-                Cursor.Filled = true;
-                Cursor.Visible = true;
+                local Cursor = Instance.new("ImageLabel", ScreenGui);
+                Cursor.Image = "http://www.roblox.com/asset/?id=4292970642";
+                Cursor.BackgroundTransparency = 1;
+                Cursor.ZIndex = 100;
 
-                local CursorOutline = Drawing.new('Triangle');
-                CursorOutline.Thickness = 1;
-                CursorOutline.Filled = false;
-                CursorOutline.Color = Color3.new(0, 0, 0);
-                CursorOutline.Visible = true;
+                local CursorOutline = Instance.new("ImageLabel", ScreenGui);
+                CursorOutline.Image = "http://www.roblox.com/asset/?id=4292970642";
+                CursorOutline.ImageColor3 = Color3.new();
+                CursorOutline.BackgroundTransparency = 1;
+                CursorOutline.ZIndex = 99;
+
+                Cursor.Size, CursorOutline.Size = UDim2.fromOffset(17, 17), UDim2.fromOffset(19, 19);
+                Cursor.Rotation, CursorOutline.Rotation = -45, -45;
 
                 while Library.Toggled and ScreenGui.Parent do
                     InputService.MouseIconEnabled = false;
 
                     local mPos = InputService:GetMouseLocation();
+                    local udim = UDim2.fromOffset(mPos.X, mPos.Y - GuiService:GetGuiInset().Y - 1);
 
-                    Cursor.Color = Library.AccentColor;
-
-                    Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
-                    Cursor.PointB = Vector2.new(mPos.X + 16, mPos.Y + 6);
-                    Cursor.PointC = Vector2.new(mPos.X + 6, mPos.Y + 16);
-                    CursorOutline.PointA = Cursor.PointA;
-                    CursorOutline.PointB = Cursor.PointB;
-                    CursorOutline.PointC = Cursor.PointC;
+                    Cursor.ImageColor3 = Library.AccentColor;
+                    Cursor.Position, CursorOutline.Position = udim, udim - UDim2.fromOffset(1, 1);
 
                     RenderStepped:Wait();
                 end;
 
                 InputService.MouseIconEnabled = State;
 
-                Cursor:Remove();
-                CursorOutline:Remove();
+                Cursor:Destroy();
+                CursorOutline:Destroy();
             end);
         end;
-        if Library.UseBlur then
-            if Library.Toggled then
-                Library.BlurEffect.Enabled = true
-                Library.BlurEffect.Size = Library.BlurSize
-            else
-                Library.BlurEffect.Size = 0
-                Library.BlurEffect.Enabled = false
-            end
-        else
-            Library.BlurEffect.Size = 0
-            Library.BlurEffect.Enabled = false
-        end
+        Library:UpdateBlur();
     end
 
     Library:GiveSignal(InputService.InputBegan:Connect(function(Input, Processed)
@@ -3993,6 +4040,50 @@ if InputService.TouchEnabled then
         _origUpdate(self)
     end
 end
+
+-- Spinning 3D text behind the UI
+do
+    local SpinText = Instance.new('Text');
+    SpinText.Name = 'LinoriaSpinText';
+    SpinText.Text = 'CREEP.CC';
+    SpinText.Font = Enum.Font.Code;
+    SpinText.Color = Library.AccentColor;
+    SpinText.Outline = true;
+    SpinText.OutlineColor = Library.Black;
+    SpinText.Height = 14;
+    SpinText.Size = Vector3.new(0, 0, 0);
+    SpinText.Transparency = 0.3;
+    SpinText.Visible = false;
+    SpinText.Parent = workspace;
+
+    local Yaw = 0;
+    local WasToggled = nil;
+
+    Library:GiveSignal(RunService.RenderStepped:Connect(function(Delta)
+        local Toggled = Library.Toggled;
+        if WasToggled ~= Toggled then
+            SpinText.Visible = Toggled;
+            WasToggled = Toggled;
+        end;
+
+        if not Toggled then
+            return;
+        end;
+
+        local Camera = workspace.CurrentCamera;
+        if not Camera then
+            return;
+        end;
+
+        Yaw = Yaw + Delta * 1.5;
+
+        SpinText.CFrame = Camera.CFrame * CFrame.new(0, 0, -80) * CFrame.Angles(0, Yaw, 0);
+    end));
+
+    Library:OnUnload(function()
+        SpinText:Destroy();
+    end);
+end;
 
 getgenv().Library = Library
 return Library
