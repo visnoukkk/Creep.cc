@@ -3495,6 +3495,8 @@ function Library:CreateWindow(...)
         local Resizing = false;
         local ResizeConn, EndConn;
         local StartSize, DragStart, DragType;
+        local HasMoved = false;
+        local Wireframe;
 
         local function StopResize()
             Resizing = false;
@@ -3510,6 +3512,8 @@ function Library:CreateWindow(...)
             StartSize = Outer.Size;
             DragStart = Position;
             DragType = FromType;
+            HasMoved = false;
+            if Wireframe then Wireframe:Destroy(); Wireframe = nil; end
 
             ResizeConn = InputService.InputChanged:Connect(function(Change)
                 local T = Change.UserInputType;
@@ -3517,17 +3521,51 @@ function Library:CreateWindow(...)
                 if DragType ~= Enum.UserInputType.Touch and T == Enum.UserInputType.Touch then return; end
 
                 local Delta = Change.Position - DragStart;
+                if not HasMoved and Delta.Magnitude <= 2 then return; end
+
                 local TopLeft = Outer.AbsolutePosition;
                 local VPSize = workspace.CurrentCamera.ViewportSize;
 
                 local NewW = math.clamp(StartSize.X.Offset + Delta.X, MinW, VPSize.X - TopLeft.X);
                 local NewH = math.clamp(StartSize.Y.Offset + Delta.Y, MinH, VPSize.Y - TopLeft.Y);
 
-                Outer.Size = UDim2.fromOffset(NewW, NewH);
+                if Library.WireframeDrag then
+                    if not HasMoved then
+                        HasMoved = true;
+
+                        Wireframe = Library:Create('Frame', {
+                            Size = UDim2.fromOffset(NewW, NewH);
+                            Position = UDim2.fromOffset(TopLeft.X, TopLeft.Y);
+                            BackgroundTransparency = 1;
+                            Active = false;
+                            ZIndex = 100000;
+                            Parent = ScreenGui;
+                        });
+
+                        Library:Create('UIStroke', {
+                            Color = Library.AccentColor;
+                            Thickness = 1;
+                            ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+                            Parent = Wireframe;
+                        });
+                    end;
+
+                    if HasMoved and Wireframe then
+                        Wireframe.Position = UDim2.fromOffset(TopLeft.X, TopLeft.Y);
+                        Wireframe.Size = UDim2.fromOffset(NewW, NewH);
+                    end;
+                else
+                    Outer.Size = UDim2.fromOffset(NewW, NewH);
+                end;
             end);
 
             EndConn = InputService.InputEnded:Connect(function(EndInput)
                 if EndInput.UserInputType == DragType then
+                    if Library.WireframeDrag and HasMoved and Wireframe then
+                        Outer.Size = Wireframe.Size;
+                        Wireframe:Destroy();
+                        Wireframe = nil;
+                    end;
                     StopResize();
                 end;
             end);
