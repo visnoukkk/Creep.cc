@@ -2934,30 +2934,14 @@ do
         Parent = Library.NotificationArea;
     });
     local function Library_UpdateNotifAlignment()
-        local cfg = Library.NotifyConfig
         local area = Library.NotificationArea
         local layout = Library.NotifLayout
 
-        local align = cfg.Alignment or 'Left'
-        if align == 'Center' then
-            area.AnchorPoint = Vector2.new(0.5, 1)
-            area.Position = UDim2.new(0.5, 0, 1, -10)
-            area.Size = UDim2.new(0, 300, 1, -10)
-            layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-            layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-        elseif align == 'Right' then
-            area.AnchorPoint = Vector2.new(0, 0)
-            area.Position = UDim2.new(0, cfg.PositionX, 0, cfg.PositionY)
-            area.Size = UDim2.new(0, 300, 1, -cfg.PositionY)
-            layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-            layout.VerticalAlignment = Enum.VerticalAlignment.Top
-        else
-            area.AnchorPoint = Vector2.new(0, 0)
-            area.Position = UDim2.new(0, cfg.PositionX, 0, cfg.PositionY)
-            area.Size = UDim2.new(0, 300, 1, -cfg.PositionY)
-            layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-            layout.VerticalAlignment = Enum.VerticalAlignment.Top
-        end
+        area.AnchorPoint = Vector2.new(0.5, 1)
+        area.Position = UDim2.new(0.5, 0, 1, -10)
+        area.Size = UDim2.new(0, 300, 1, -10)
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
     end
     Library.UpdateNotifAlignment = Library_UpdateNotifAlignment
     Library_UpdateNotifAlignment()
@@ -3127,23 +3111,14 @@ function Library:Notify(Text, Time)
     local labelPosX  = (barSide == 'Left')  and BAR_THIN + 2 or 4
     local labelSizeW = (barSide == 'Left' or barSide == 'Right') and -(BAR_THIN + 4) or -4
 
-    local outerAnchor = Vector2.new(0, 0)
+    local outerAnchor = Vector2.new(0.5, 0)
     local outerPosX   = 0
-    if align == 'Center' then
-        outerAnchor = Vector2.new(0.5, 0)
-        outerPosX   = 0  
-    elseif align == 'Right' then
-        outerAnchor = Vector2.new(1, 0)
-        outerPosX   = 0
-    end
 
     local NotifyOuter = Library:Create('Frame', {
         BackgroundTransparency = 1;
         AnchorPoint = outerAnchor;
         BorderColor3 = Color3.new(0, 0, 0);
-        Position     = (align == 'Center')
-            and UDim2.new(0.5, 0, 0, 0)
-            or  (align == 'Right' and UDim2.new(1, 0, 0, 0) or UDim2.new(0, 0, 0, 0));
+        Position     = UDim2.new(0.5, 0, 0, 0);
         Size = UDim2.new(0, 0, 0, YSize);
         ClipsDescendants = true;
         ZIndex = 100;
@@ -3189,9 +3164,7 @@ function Library:Notify(Text, Time)
         Position = UDim2.new(0, labelPosX, 0, 0);
         Size     = UDim2.new(1, labelSizeW, 1, 0);
         Text     = Text;
-        TextXAlignment = (align == 'Center')
-            and Enum.TextXAlignment.Center
-            or  Enum.TextXAlignment.Left;
+        TextXAlignment = Enum.TextXAlignment.Center;
         TextSize = Library.FontSize;
         ZIndex   = 103;
         Parent   = InnerFrame;
