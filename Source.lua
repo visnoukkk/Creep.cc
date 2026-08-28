@@ -56,7 +56,7 @@ local Library = {
 
     NotifyConfig = {
         Alignment = 'Center';
-        BarSide   = 'Left';
+        BarSide   = 'Top';
         PositionX = 0;
         PositionY = 40;
     };
@@ -2930,19 +2930,30 @@ do
     });
 
     local function RelayoutNotifications()
-        local Y = 10;
         for Idx = #Library.NotificationStack, 1, -1 do
             local Data = Library.NotificationStack[Idx];
-            local NotifyOuter = Data.Frame;
-
-            if not NotifyOuter.Parent then
+            if not Data.Frame.Parent then
                 table.remove(Library.NotificationStack, Idx);
-            else
-                NotifyOuter.AnchorPoint = Vector2.new(0.5, 0);
-                NotifyOuter.Position = UDim2.new(0.5, 0, 1, -Y);
-
-                Y = Y + Data.Height + 4;
             end;
+        end;
+
+        local Count = #Library.NotificationStack;
+        if Count == 0 then
+            return;
+        end;
+
+        local Total = 0;
+        for Idx = 1, Count do
+            Total = Total + Library.NotificationStack[Idx].Height + 4;
+        end;
+
+        local Y = -(Total / 2);
+        for Idx = Count, 1, -1 do
+            local Data = Library.NotificationStack[Idx];
+            Data.Frame.AnchorPoint = Vector2.new(0.5, 0);
+            Data.Frame.Position = UDim2.new(0.5, 0, 0.5, Y);
+
+            Y = Y + Data.Height + 4;
         end;
     end;
     Library.RelayoutNotifications = RelayoutNotifications;
