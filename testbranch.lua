@@ -98,25 +98,21 @@ function Library:UpdateBlur()
         Library.BlurEffect.Enabled = true;
     end
 
-    TweenService:Create(Library.BlurEffect, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = targetSize}):Play();
+    Library.BlurEffect.Size = targetSize;
 
     if Library.DarkOverlay then
-        TweenService:Create(Library.DarkOverlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = targetBg}):Play();
+        Library.DarkOverlay.BackgroundTransparency = targetBg;
     end
 
     if not open then
-        task.delay(0.25, function()
-            if not (Library.Toggled and Library.UseBlur) then
-                Library.BlurEffect.Enabled = false;
-            end
-        end);
+        Library.BlurEffect.Enabled = false;
     end
 end
 
 function Library:SetBlur(Size)
     Library.BlurSize = math.clamp(Size, 0, 56);
     if Library.Toggled and Library.UseBlur then
-        TweenService:Create(Library.BlurEffect, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {Size = Library.BlurSize}):Play();
+        Library.BlurEffect.Size = Library.BlurSize;
     end
 end
 
@@ -3831,39 +3827,38 @@ function Library:CreateWindow(...)
         if Library.Toggled then
             task.spawn(function()
                 local State = InputService.MouseIconEnabled;
+                local GuiService = game:GetService("GuiService");
 
-                local Cursor = Drawing.new('Triangle');
-                Cursor.Thickness = 1;
-                Cursor.Filled = true;
-                Cursor.Visible = true;
+                local Cursor = Instance.new("ImageLabel", ScreenGui);
+                Cursor.Image = "http://www.roblox.com/asset/?id=4292970642";
+                Cursor.BackgroundTransparency = 1;
+                Cursor.ZIndex = 100;
 
-                local CursorOutline = Drawing.new('Triangle');
-                CursorOutline.Thickness = 1;
-                CursorOutline.Filled = false;
-                CursorOutline.Color = Color3.new(0, 0, 0);
-                CursorOutline.Visible = true;
+                local CursorOutline = Instance.new("ImageLabel", ScreenGui);
+                CursorOutline.Image = "http://www.roblox.com/asset/?id=4292970642";
+                CursorOutline.ImageColor3 = Color3.new();
+                CursorOutline.BackgroundTransparency = 1;
+                CursorOutline.ZIndex = 99;
+
+                Cursor.Size, CursorOutline.Size = UDim2.fromOffset(17, 17), UDim2.fromOffset(19, 19);
+                Cursor.Rotation, CursorOutline.Rotation = -45, -45;
 
                 while Library.Toggled and ScreenGui.Parent do
                     InputService.MouseIconEnabled = false;
 
                     local mPos = InputService:GetMouseLocation();
+                    local udim = UDim2.fromOffset(mPos.X, mPos.Y - GuiService:GetGuiInset().Y - 1);
 
-                    Cursor.Color = Library.AccentColor;
-
-                    Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
-                    Cursor.PointB = Vector2.new(mPos.X + 16, mPos.Y + 6);
-                    Cursor.PointC = Vector2.new(mPos.X + 6, mPos.Y + 16);
-                    CursorOutline.PointA = Cursor.PointA;
-                    CursorOutline.PointB = Cursor.PointB;
-                    CursorOutline.PointC = Cursor.PointC;
+                    Cursor.ImageColor3 = Library.AccentColor;
+                    Cursor.Position, CursorOutline.Position = udim, udim - UDim2.fromOffset(1, 1);
 
                     RenderStepped:Wait();
                 end;
 
                 InputService.MouseIconEnabled = State;
 
-                Cursor:Remove();
-                CursorOutline:Remove();
+                Cursor:Destroy();
+                CursorOutline:Destroy();
             end);
         end;
         Library:UpdateBlur();
