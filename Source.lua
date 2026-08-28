@@ -4043,25 +4043,20 @@ end
 
 -- Spinning 3D text behind the UI
 do
-    local Backdrop = Instance.new('ViewportFrame');
-    Backdrop.Name = 'LinoriaSpinText';
-    Backdrop.BackgroundTransparency = 1;
-    Backdrop.BorderSizePixel = 0;
-    Backdrop.ZIndex = 0;
-    Backdrop.Visible = false;
-    Backdrop.Size = UDim2.new(1, 0, 1, 0);
-    Backdrop.Parent = ScreenGui;
-
     local TextPart = Instance.new('Part');
+    TextPart.Name = 'LinoriaSpinText';
     TextPart.Anchored = true;
+    TextPart.CanCollide = false;
+    TextPart.CanQuery = false;
+    TextPart.CanTouch = false;
     TextPart.CastShadow = false;
     TextPart.Material = Enum.Material.SmoothPlastic;
-    TextPart.Color = Library.BackgroundColor;
-    TextPart.Size = Vector3.new(28, 8, 1);
-    TextPart.Parent = Backdrop;
+    TextPart.Color = Color3.new(1, 1, 1);
+    TextPart.Size = Vector3.new(18, 5, 1);
 
     for _, Face in next, { Enum.NormalId.Front, Enum.NormalId.Back } do
         local Surface = Instance.new('SurfaceGui', TextPart);
+        Surface.Adornee = TextPart;
         Surface.Face = Face;
         Surface.CanvasSize = Vector2.new(1024, 256);
 
@@ -4077,17 +4072,13 @@ do
         Label.TextStrokeTransparency = 0.2;
     end;
 
-    local Camera = Instance.new('Camera', Backdrop);
-    Backdrop.CurrentCamera = Camera;
-    Camera.CFrame = CFrame.lookAt(Vector3.new(16, 1.5, 16), Vector3.new(0, 0, 0));
-
     local Yaw = 0;
     local WasToggled = nil;
 
     Library:GiveSignal(RunService.RenderStepped:Connect(function(Delta)
         local Toggled = Library.Toggled;
         if WasToggled ~= Toggled then
-            Backdrop.Visible = Toggled;
+            TextPart.Parent = Toggled and workspace or nil;
             WasToggled = Toggled;
         end;
 
@@ -4095,13 +4086,18 @@ do
             return;
         end;
 
+        local Camera = workspace.CurrentCamera;
+        if not Camera then
+            return;
+        end;
+
         Yaw = Yaw + Delta * 0.9;
 
-        TextPart.CFrame = CFrame.Angles(0, Yaw, 0);
+        TextPart.CFrame = Camera.CFrame * CFrame.new(0, 0, -18) * CFrame.Angles(0, Yaw, 0);
     end));
 
     Library:OnUnload(function()
-        Backdrop:Destroy();
+        TextPart:Destroy();
     end);
 end;
 
