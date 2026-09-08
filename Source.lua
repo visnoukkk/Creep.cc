@@ -312,7 +312,9 @@ function Library:Create(Class, Properties)
         _Instance = Instance.new(Class);
     end;
     for Property, Value in next, Properties do
-        _Instance[Property] = Value;
+        pcall(function()
+            _Instance[Property] = Value;
+        end);
     end;
 
     if _Instance:IsA("TextLabel") or _Instance:IsA("TextBox") or _Instance:IsA("TextButton") then
