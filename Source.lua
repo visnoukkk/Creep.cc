@@ -3258,7 +3258,7 @@ function Library:SpawnNotify(Text, Time)
     Library:AddToRegistry(GradientFrame, { BackgroundColor3 = 'MainColor' });
     local G = Library:Create('UIGradient', { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }); Rotation = -90; Parent = GradientFrame });
     Library:AddToRegistry(G, { Color = function() return ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }) end });
-    Library:CreateLabel({ PreserveCase = true; Position = UDim2.new(0, 8, 0, 0); Size = UDim2.new(1, -8, 1, 0); Text = Text; TextXAlignment = Enum.TextXAlignment.Left; TextSize = 13; ZIndex = 103; Parent = GradientFrame });
+    Library:CreateLabel({ Position = UDim2.new(0, 8, 0, 0); Size = UDim2.new(1, -8, 1, 0); Text = Text; TextXAlignment = Enum.TextXAlignment.Left; TextSize = 13; ZIndex = 103; Parent = GradientFrame });
     local BarOnTop = Library.NotifyConfig.BarSide == "Top";
     Library:Create('Frame', {
         BackgroundColor3  = Library.AccentColor;
