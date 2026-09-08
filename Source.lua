@@ -3225,18 +3225,19 @@ function Library:ProcessNotifyQueue()
 end;
 
 function Library:SpawnNotify(Text, Time)
-    local xw = (Library:GetTextBounds(Text, Library.CustomFontFace or Library.Font, 13) or 200) * fontScale(Library.Font);
+    local OK, PX = pcall(Library.GetTextBounds, Library, Text, Library.CustomFontFace or Library.Font, 13);
+    local xw = (OK and type(PX) == 'number' and PX > 0 and PX or 200) * fontScale(Library.Font);
     local H = 22;
     local NotifyTransparency = (Library.NotifyConfig.Transparency or 0) / 100;
     Library.NotifyCounter = Library.NotifyCounter + 1;
     local Outer = Library:Create('Frame', {
         BackgroundTransparency  = 1;
         BorderSizePixel         = 0;
-        Size                    = UDim2.fromOffset(0, H);
+        Size                    = UDim2.fromOffset(xw + 16, H);
         ClipsDescendants        = true;
         LayoutOrder             = Library.NotifyConfig.SortOrder == "Text Length" and #Text or Library.NotifyCounter;
         ZIndex                  = 100;
-        Parent                  = Library.NotificationArea;
+        Parent                  = Library.NotificationArea or ScreenGui;
     });
     local Inner = Library:Create('Frame', {
         BackgroundColor3  = Library.MainColor;
@@ -3249,7 +3250,7 @@ function Library:SpawnNotify(Text, Time)
     Library:AddToRegistry(Inner, { BackgroundColor3 = 'MainColor' });
     local InnerStroke = Library:Create('UIStroke', {
         Color       = Library.OutlineColor;
-        Transparency = NotifyTransparency;
+        Transparency = 0;
         Thickness   = 1;
         Parent      = Inner;
     });
@@ -3269,12 +3270,9 @@ function Library:SpawnNotify(Text, Time)
         Parent            = Outer;
     });
     Library:AddToRegistry(Outer:GetChildren()[#Outer:GetChildren()], { BackgroundColor3 = 'AccentColor' }, true);
-    pcall(Outer.TweenSize, Outer, UDim2.fromOffset(xw + 16, H), 'Out', 'Quad', 0.35, true);
     Library.ActiveNotifyCount = Library.ActiveNotifyCount + 1;
     task.spawn(function()
         task.wait(Time or 5);
-        pcall(Outer.TweenSize, Outer, UDim2.fromOffset(0, H), 'Out', 'Quad', 0.35, true);
-        task.wait(0.4);
         Outer:Destroy();
         Library.ActiveNotifyCount = Library.ActiveNotifyCount - 1;
         Library:ProcessNotifyQueue();
