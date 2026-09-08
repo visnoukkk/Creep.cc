@@ -70,7 +70,7 @@ local Library = {
         MaxHeight        = 200;
         PosX             = 50;
         PosY             = 60;
-        Transparency     = 50;
+        Transparency     = 60;
         Alignment        = "Center";
         BarSide          = "Bottom";
         SortOrder        = "Time";
@@ -3225,19 +3225,18 @@ function Library:ProcessNotifyQueue()
 end;
 
 function Library:SpawnNotify(Text, Time)
-    local OK, PX = pcall(Library.GetTextBounds, Library, Text, Library.CustomFontFace or Library.Font, 13);
-    local xw = (OK and type(PX) == 'number' and PX > 0 and PX or 200) * fontScale(Library.Font);
+    local xw = (Library:GetTextBounds(Text, Library.CustomFontFace or Library.Font, 13) or 200) * fontScale(Library.Font);
     local H = 22;
     local NotifyTransparency = (Library.NotifyConfig.Transparency or 0) / 100;
     Library.NotifyCounter = Library.NotifyCounter + 1;
     local Outer = Library:Create('Frame', {
         BackgroundTransparency  = 1;
         BorderSizePixel         = 0;
-        Size                    = UDim2.fromOffset(xw + 16, H);
+        Size                    = UDim2.fromOffset(0, H);
         ClipsDescendants        = true;
         LayoutOrder             = Library.NotifyConfig.SortOrder == "Text Length" and #Text or Library.NotifyCounter;
         ZIndex                  = 100;
-        Parent                  = Library.NotificationArea or ScreenGui;
+        Parent                  = Library.NotificationArea;
     });
     local Inner = Library:Create('Frame', {
         BackgroundColor3  = Library.MainColor;
@@ -3250,7 +3249,7 @@ function Library:SpawnNotify(Text, Time)
     Library:AddToRegistry(Inner, { BackgroundColor3 = 'MainColor' });
     local InnerStroke = Library:Create('UIStroke', {
         Color       = Library.OutlineColor;
-        Transparency = 0;
+        Transparency = NotifyTransparency;
         Thickness   = 1;
         Parent      = Inner;
     });
@@ -3259,47 +3258,7 @@ function Library:SpawnNotify(Text, Time)
     Library:AddToRegistry(GradientFrame, { BackgroundColor3 = 'MainColor' });
     local G = Library:Create('UIGradient', { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }); Rotation = -90; Parent = GradientFrame });
     Library:AddToRegistry(G, { Color = function() return ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }) end });
-    Library.ActiveNotifyCount = Library.ActiveNotifyCount + 1;
-    local Destroyed = false;
-    task.spawn(function()
-        task.wait(Time or 5);
-        if not Destroyed then
-            Destroyed = true;
-            Outer:Destroy();
-            Library.ActiveNotifyCount = Library.ActiveNotifyCount - 1;
-            Library:ProcessNotifyQueue();
-        end
-    end);
-    local LabelBuild = pcall(Library.CreateLabel, Library, {
-        PreserveCase = true;
-        Position     = UDim2.new(0, 8, 0, 0);
-        Size         = UDim2.new(1, -16, 1, 0);
-        Text         = Text;
-        TextXAlignment = Enum.TextXAlignment.Left;
-        TextYAlignment = Enum.TextYAlignment.Center;
-        TextSize     = 13;
-        ZIndex       = 103;
-        Parent       = GradientFrame;
-    });
-    if not LabelBuild then
-        local NotifyLabel = Library:Create('TextLabel', {
-            BackgroundTransparency = 1;
-            Font = Library.Font;
-            Text = Text;
-            TextColor3 = Color3.new(1, 1, 1);
-            TextSize = 13;
-            TextStrokeTransparency = 0;
-            TextStrokeColor3 = Color3.new(0, 0, 0);
-            TextStrokeThickness = 2;
-            TextXAlignment = Enum.TextXAlignment.Left;
-            TextYAlignment = Enum.TextYAlignment.Center;
-            Position = UDim2.new(0, 8, 0, 0);
-            Size = UDim2.new(1, -16, 1, 0);
-            ZIndex = 103;
-            Parent = GradientFrame;
-        });
-        Library:AddToRegistry(NotifyLabel, { TextColor3 = 'FontColor' });
-    end
+    Library:CreateLabel({ PreserveCase = true; Position = UDim2.new(0, 8, 0, 0); Size = UDim2.new(1, -8, 1, 0); Text = Text; TextXAlignment = Enum.TextXAlignment.Left; TextSize = 13; ZIndex = 103; Parent = GradientFrame });
     local BarOnTop = Library.NotifyConfig.BarSide == "Top";
     Library:Create('Frame', {
         BackgroundColor3  = Library.AccentColor;
@@ -3310,6 +3269,16 @@ function Library:SpawnNotify(Text, Time)
         Parent            = Outer;
     });
     Library:AddToRegistry(Outer:GetChildren()[#Outer:GetChildren()], { BackgroundColor3 = 'AccentColor' }, true);
+    pcall(Outer.TweenSize, Outer, UDim2.fromOffset(xw + 16, H), 'Out', 'Quad', 0.35, true);
+    Library.ActiveNotifyCount = Library.ActiveNotifyCount + 1;
+    task.spawn(function()
+        task.wait(Time or 5);
+        pcall(Outer.TweenSize, Outer, UDim2.fromOffset(0, H), 'Out', 'Quad', 0.35, true);
+        task.wait(0.4);
+        Outer:Destroy();
+        Library.ActiveNotifyCount = Library.ActiveNotifyCount - 1;
+        Library:ProcessNotifyQueue();
+    end);
 end;
 
 function Library:CreateWindow(...)
