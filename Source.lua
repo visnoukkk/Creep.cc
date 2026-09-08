@@ -387,7 +387,8 @@ function Library:MakeDraggable(Instance, Cutoff, IsWindow)
                                 Size = Instance.Size,
                                 Position = Instance.Position,
                                 AnchorPoint = Instance.AnchorPoint,
-                                BackgroundTransparency = 1,
+                                BackgroundColor3 = Library.MainColor,
+                                BackgroundTransparency = 0.5,
                                 Active = false,
                                 ZIndex = 100000,
                                 Parent = ScreenGui
