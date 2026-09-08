@@ -3261,12 +3261,26 @@ function Library:SpawnNotify(Text, Time)
     local G = Library:Create('UIGradient', { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }); Rotation = -90; Parent = GradientFrame });
     Library:AddToRegistry(G, { Color = function() return ColorSequence.new({ ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)), ColorSequenceKeypoint.new(1, Library.MainColor) }) end });
     Library:CreateLabel({ Position = UDim2.new(0, 8, 0, 0); Size = UDim2.new(1, -8, 1, 0); Text = Text; TextXAlignment = Enum.TextXAlignment.Left; TextSize = 13; ZIndex = 103; Parent = GradientFrame });
-    local BarOnTop = Library.NotifyConfig.BarSide == "Top";
+    local BarSide = Library.NotifyConfig.BarSide or "Bottom";
+    local AccentBarPos, AccentBarSize;
+    if BarSide == "Top" then
+        AccentBarPos  = UDim2.new(0, -1, 0, -1);
+        AccentBarSize = UDim2.new(1, 2, 0, 3);
+    elseif BarSide == "Bottom" then
+        AccentBarPos  = UDim2.new(0, -1, 1, -2);
+        AccentBarSize = UDim2.new(1, 2, 0, 3);
+    elseif BarSide == "Left" then
+        AccentBarPos  = UDim2.new(0, -1, 0, -1);
+        AccentBarSize = UDim2.new(0, 3, 1, 2);
+    else
+        AccentBarPos  = UDim2.new(1, -2, 0, -1);
+        AccentBarSize = UDim2.new(0, 3, 1, 2);
+    end;
     Library:Create('Frame', {
         BackgroundColor3  = Library.AccentColor;
         BorderSizePixel   = 0;
-        Position          = BarOnTop and UDim2.new(0, -1, 0, -1) or UDim2.new(0, -1, 1, -2);
-        Size              = UDim2.new(1, 2, 0, 3);
+        Position          = AccentBarPos;
+        Size              = AccentBarSize;
         ZIndex            = 104;
         Parent            = Outer;
     });
