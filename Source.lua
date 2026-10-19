@@ -6341,13 +6341,29 @@ if not EZ.AccentColorDark then
 end
 
 -- Linoria / Creep style Unload + OnUnload
-Library.OnUnload = nil;
+-- Store callbacks in a list so multiple bc:OnUnload(...) calls all run,
+-- and never overwrite the method itself (that caused stack overflow).
+Library._UnloadCallbacks = {};
+Library.Unloaded = false;
 
 function Library:OnUnload(Callback)
-	Library.OnUnload = Callback;
+	if type(Callback) == 'function' then
+		table.insert(Library._UnloadCallbacks, Callback);
+	end
 end
 
 function Library:Unload()
+	if Library.Unloaded then
+		return;
+	end
+	Library.Unloaded = true;
+
+	-- run user callbacks first
+	for _, cb in ipairs(Library._UnloadCallbacks) do
+		pcall(cb);
+	end
+	Library._UnloadCallbacks = {};
+
 	-- disconnect signals
 	if Library.Signals then
 		for Idx = #Library.Signals, 1, -1 do
@@ -6356,11 +6372,6 @@ function Library:Unload()
 				pcall(function() Connection:Disconnect() end);
 			end
 		end
-	end
-
-	-- user callback
-	if type(Library.OnUnload) == 'function' then
-		pcall(Library.OnUnload);
 	end
 
 	-- cleanup visual effects
@@ -6394,17 +6405,7 @@ function Library:Unload()
 		if MenuDimGui then MenuDimGui:Destroy() end
 	end);
 
-	Library.Unloaded = true;
 	getgenv().Library = nil;
-end
-
--- Alias for scripts that call Library:Unload() via metatable patterns
-EZ.OnUnload = nil;
-function EZ:OnUnload(Callback)
-	return Library:OnUnload(Callback);
-end
-function EZ:Unload()
-	return Library:Unload();
 end
 
 return Library;
