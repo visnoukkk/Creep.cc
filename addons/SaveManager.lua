@@ -153,30 +153,43 @@ local SaveManager = {} do
 		end
 	end
 
-	function SaveManager:RefreshConfigList()
-		local list = listfiles(self.Folder .. '/settings')
+		function SaveManager:RefreshConfigList()
+		local settingsPath = self.Folder .. '/settings'
+		if not isfolder(settingsPath) then
+			pcall(makefolder, settingsPath)
+			return { 'None' }
+		end
+
+		local ok, list = pcall(listfiles, settingsPath)
+		if not ok or type(list) ~= 'table' then
+			return { 'None' }
+		end
 
 		local out = {}
 		for i = 1, #list do
 			local file = list[i]
-			if file:sub(-5) == '.json' then
-				-- i hate this but it has to be done ...
-
+			if type(file) == 'string' and file:sub(-5) == '.json' then
 				local pos = file:find('.json', 1, true)
-				local start = pos
-
-				local char = file:sub(pos, pos)
-				while char ~= '/' and char ~= '\\' and char ~= '' do
-					pos = pos - 1
-					char = file:sub(pos, pos)
-				end
-
-				if char == '/' or char == '\\' then
-					table.insert(out, file:sub(pos + 1, start - 1))
+				if pos then
+					local char = file:sub(pos, pos)
+					while char ~= '/' and char ~= '\\' and char ~= '' and pos > 1 do
+						pos = pos - 1
+						char = file:sub(pos, pos)
+					end
+					if char == '/' or char == '\\' then
+						table.insert(out, file:sub(pos + 1, #file - 5))
+					else
+						local name = file:match('([^/\\]+)%.json$')
+						if name then table.insert(out, name) end
+					end
 				end
 			end
 		end
-		
+
+		table.sort(out)
+		if #out == 0 then
+			return { 'None' }
+		end
 		return out
 	end
 
