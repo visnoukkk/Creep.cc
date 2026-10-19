@@ -6326,6 +6326,7 @@ function EZ:CreateWindow(...)
 	return Window;
 end;
 
+
 -- Compatibility aliases for Creep.cc / Linoria-style scripts
 local Library = EZ;
 Library.Toggles = Toggles;
@@ -6337,6 +6338,73 @@ getgenv().Options = Options;
 -- Ensure AccentColorDark stays in sync when theme changes
 if not EZ.AccentColorDark then
 	EZ.AccentColorDark = EZ:GetDarkerColor(EZ.AccentColor);
+end
+
+-- Linoria / Creep style Unload + OnUnload
+Library.OnUnload = nil;
+
+function Library:OnUnload(Callback)
+	Library.OnUnload = Callback;
+end
+
+function Library:Unload()
+	-- disconnect signals
+	if Library.Signals then
+		for Idx = #Library.Signals, 1, -1 do
+			local Connection = table.remove(Library.Signals, Idx);
+			if Connection and Connection.Disconnect then
+				pcall(function() Connection:Disconnect() end);
+			end
+		end
+	end
+
+	-- user callback
+	if type(Library.OnUnload) == 'function' then
+		pcall(Library.OnUnload);
+	end
+
+	-- cleanup visual effects
+	pcall(function()
+		if Library.MenuBlur then
+			Library.MenuBlur:Destroy();
+		end
+	end);
+	pcall(function()
+		if Library.MenuColor then
+			Library.MenuColor:Destroy();
+		end
+	end);
+	pcall(function()
+		if Library.MenuDim and Library.MenuDim.Parent then
+			Library.MenuDim.Parent:Destroy();
+		end
+	end);
+
+	-- destroy GUIs
+	pcall(function()
+		if ScreenGui then ScreenGui:Destroy() end
+	end);
+	pcall(function()
+		if OutlineGui then OutlineGui:Destroy() end
+	end);
+	pcall(function()
+		if CursorGui then CursorGui:Destroy() end
+	end);
+	pcall(function()
+		if MenuDimGui then MenuDimGui:Destroy() end
+	end);
+
+	Library.Unloaded = true;
+	getgenv().Library = nil;
+end
+
+-- Alias for scripts that call Library:Unload() via metatable patterns
+EZ.OnUnload = nil;
+function EZ:OnUnload(Callback)
+	return Library:OnUnload(Callback);
+end
+function EZ:Unload()
+	return Library:Unload();
 end
 
 return Library;
