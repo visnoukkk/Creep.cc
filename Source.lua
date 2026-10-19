@@ -121,7 +121,7 @@ local EZ = {
 	DependencyBoxes = {};
 
 	KeypickerListVisible = true;
-	KeypickerListMode = "Toggled";
+	KeypickerListMode = "All"; -- "All" | "Toggled" | "Active"
 	ShowToggleFrameInKeybinds = true;
 
 	Signals = {};
@@ -2144,15 +2144,24 @@ DisplayFrame.InputBegan:Connect(function(Input)
 
 		function KeyPicker:Update()
 			if not KeyPicker.NoUI then
-				local mode = EZ.KeypickerListMode;
+				local mode = EZ.KeypickerListMode or 'All';
 				local State = KeyPicker:GetState();
 
 				local shouldShow = true;
-				if (mode == "Active" and KeyPicker.Parent.Type == "Toggle" and (not State or not KeyPicker.Parent.Value)) then
-					shouldShow = false;
-				elseif (mode == "Toggled" and KeyPicker.Parent.Type == "Toggle" and not KeyPicker.Parent.Value) then
-					shouldShow = false;
-				end;
+				-- "All" = always list the keybind (unless NoUI)
+				-- "Toggled" = only when parent toggle is on
+				-- "Active" = only when keybind state is currently active
+				if mode == 'Active' then
+					if KeyPicker.Parent and KeyPicker.Parent.Type == 'Toggle' and (not State or not KeyPicker.Parent.Value) then
+						shouldShow = false;
+					elseif not State then
+						shouldShow = false;
+					end
+				elseif mode == 'Toggled' then
+					if KeyPicker.Parent and KeyPicker.Parent.Type == 'Toggle' and not KeyPicker.Parent.Value then
+						shouldShow = false;
+					end
+				end
 
 				if KeybindsToggle.Loaded then
 					local ModeText = KeyPicker.Mode;
@@ -2186,9 +2195,13 @@ DisplayFrame.InputBegan:Connect(function(Input)
 				end;
 			end;
 
-			EZ.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 30, 210), 0, YSize + 23);
+			-- Keep a minimum height so the "Keybinds" title stays visible when empty
+			EZ.KeybindFrame.Size = UDim2.new(0, math.max(XSize + 30, 210), 0, math.max(YSize, 0) + 23);
 
-			EZ.KeybindFrame.Visible = EZ.KeypickerListVisible and (YSize ~= 0) and not EZ.IsMobile;
+			-- Only respect the user flag + mobile; do NOT hide when list is empty
+			if EZ.KeybindFrame then
+				EZ.KeybindFrame.Visible = (EZ.KeypickerListVisible == true) and (not EZ.IsMobile);
+			end
 		end;
 
 		function KeyPicker:OverrideState(State)
