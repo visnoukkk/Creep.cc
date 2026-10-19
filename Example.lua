@@ -1,19 +1,15 @@
---check if game is loaded
+-- check if game is loaded
 while not game:IsLoaded() do task.wait(0.1) end
 
--- ============================================================
--- POINT THESE AT YOUR HOSTED COPIES OF THE MODIFIED FILES
--- ============================================================
-local UI_URL      = 'https://YOUR_HOST/Creep_EliteZone_UI.lua'   -- EliteZone-based UI
-local THEME_URL   = 'https://YOUR_HOST/ThemeManager.lua'         -- fixed ThemeManager
-local SAVE_URL    = 'https://YOUR_HOST/SaveManager.lua'          -- fixed SaveManager
--- ============================================================
+local UI_URL      = 'https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/Source.lua'
+local THEME_URL   = 'https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/addons/ThemeManager.lua'
+local SAVE_URL    = 'https://raw.githubusercontent.com/visnoukkk/Creep.cc/refs/heads/main/addons/SaveManager.lua'
 
 local bc = loadstring(game:HttpGet(UI_URL))()
 local ci = loadstring(game:HttpGet(THEME_URL))()
 local bx = loadstring(game:HttpGet(SAVE_URL))()
 
--- create window (EliteZone accepts these options)
+-- create window
 local dc = bc:CreateWindow({
     Title = 'creep.cc example',
     Center = true,
