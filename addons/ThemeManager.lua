@@ -172,25 +172,36 @@ local ThemeManager = {} do
 		writefile(self.Folder .. '/themes/' .. file .. '.json', httpService:JSONEncode(theme))
 	end
 
-	function ThemeManager:ReloadCustomThemes()
-		local list = listfiles(self.Folder .. '/themes')
+		function ThemeManager:ReloadCustomThemes()
+		local themesPath = self.Folder .. '/themes'
+		if not isfolder(themesPath) then
+			pcall(makefolder, themesPath)
+			return {}
+		end
+
+		local ok, list = pcall(listfiles, themesPath)
+		if not ok or type(list) ~= 'table' then
+			return {}
+		end
 
 		local out = {}
 		for i = 1, #list do
 			local file = list[i]
-			if file:sub(-5) == '.json' then
-				-- i hate this but it has to be done ...
-
+			if type(file) == 'string' and file:sub(-5) == '.json' then
 				local pos = file:find('.json', 1, true)
-				local char = file:sub(pos, pos)
-
-				while char ~= '/' and char ~= '\\' and char ~= '' do
-					pos = pos - 1
-					char = file:sub(pos, pos)
-				end
-
-				if char == '/' or char == '\\' then
-					table.insert(out, file:sub(pos + 1))
+				if pos then
+					local char = file:sub(pos, pos)
+					while char ~= '/' and char ~= '\\' and char ~= '' and pos > 1 do
+						pos = pos - 1
+						char = file:sub(pos, pos)
+					end
+					if char == '/' or char == '\\' then
+						table.insert(out, file:sub(pos + 1))
+					else
+						-- bare filename
+						local name = file:match('([^/\\]+)$')
+						if name then table.insert(out, name) end
+					end
 				end
 			end
 		end
@@ -208,7 +219,7 @@ local ThemeManager = {} do
 		-- build the entire tree if a path is like some-hub/phantom-forces
 		-- makefolder builds the entire tree on Synapse X but not other exploits
 
-		local parts = self.Folder:split('/')
+		local parts = tostring(self.Folder or 'LinoriaLibSettings'):split('/')
 		for idx = 1, #parts do
 			paths[#paths + 1] = table.concat(parts, '/', 1, idx)
 		end
@@ -218,8 +229,9 @@ local ThemeManager = {} do
 
 		for i = 1, #paths do
 			local str = paths[i]
-			if not isfolder(str) then
-				makefolder(str)
+			local ok, exists = pcall(isfolder, str)
+			if not ok or not exists then
+				pcall(makefolder, str)
 			end
 		end
 	end
